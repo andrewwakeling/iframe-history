@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="iframe-history.js"></script>
+</head>
+<body>
+<!-- Problems
+In Safari, the loading progress gets stuck. (Google Maps has this problem too, so I don't think it's so servere). Related: https://discussions.apple.com/thread/4273198
+-->
+
+<!-- src not be blank by default: http://support.microsoft.com/kb/261188 -->
+<!-- OLD: If the iframe is not specified, then moving away and back to the page will present problems if the iframe is not present. It can not be programatically added, even using the same id -->
+<!-- NEW: There isn't a good way to set the initial state, and this is necessary to make the behaviour consistent across browsers (maybe) -->
+
+<!-- http://www.w3schools.com/tags/att_iframe_srcdoc.asp -->
+<iframe style="position: absolute; top: -10px; left: -10px; width: 1px; height: 1px; visibility: hidden;" id="history"
+        src="home.html">
+</iframe>
+<script>
+    /**
+     * Firefox will not generate individual items unless there is a delay.
+     *
+     * TODO: Remove this method. It is only for testing.
+     */
+    function generate() {
+        iframehistory.setFrame(document.getElementById("history"));
+        var states = [
+            {
+                object: "a'",
+                title: "The A place"
+            },
+            {
+                object: 'b',
+                title: 'The B place'
+            },
+            {
+                object: 'c',
+                title: 'The C place'
+            }
+
+        ];
+        var x;
+        for (x = 0; x < states.length; x++) {
+            (function (object, title, delay) {
+                setTimeout(function () {
+                    iframehistory.pushState(object, title);
+                }, delay);
+            }(states[x].object, states[x].title, x * 100));
+        }
+    }
+
+    iframehistory.onStateChange(function (state) {
+        var div = document.getElementById('state');
+        if (!div) {
+            div = document.createElement('div');
+            div.id = 'state';
+            document.getElementsByTagName('body')[0].appendChild(div);
+        }
+        div.innerHTML = JSON.stringify(state);
+    });
+
+</script>
+<button onclick="generate()">generate</button>
+</body>
+</html>
