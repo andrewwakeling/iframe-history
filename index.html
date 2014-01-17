@@ -23,7 +23,6 @@ In Safari, the loading progress gets stuck. (Google Maps has this problem too, s
      * TODO: Remove this method. It is only for testing.
      */
     function generate() {
-        iframehistory.setFrame(document.getElementById("history"));
         var states = [
             {
                 object: "a'",
@@ -39,11 +38,12 @@ In Safari, the loading progress gets stuck. (Google Maps has this problem too, s
             }
 
         ];
+        var iframe = document.getElementById("history");
         var x;
         for (x = 0; x < states.length; x++) {
             (function (object, title, delay) {
                 setTimeout(function () {
-                    iframehistory.pushState(object, title);
+                    iframehistory.pushState(iframe, object, title, false);
                 }, delay);
             }(states[x].object, states[x].title, x * 100));
         }

@@ -1,7 +1,17 @@
 /**
- * Browser Support
- * http://caniuse.com/x-doc-messaging
- * http://caniuse.com/datauri
+ * iframe-history.js (IE8+)
+ * A way to use iframe to store history state.
+ *
+ * Requires:
+ * - iframe element to be in the initial HTML (It can not be added progrmatically).
+ * - iframe element must point to an existing HTML page with the initial state. (e.g. home.html)
+ * - iframe-history.js must be loaded early during the page load, otherwise it can miss messages from the iframe.
+ *
+ * Sample iframe with styles:
+ * <iframe style="position: absolute; top: -10px; left: -10px; width: 1px; height: 1px; visibility: hidden;" id="history" src="home.html"></iframe>
+ *
+ * Known issues:
+ * - (Safari 6.x) Page stuck in loading state
  */
 ;
 (function () {
@@ -9,11 +19,6 @@
     var IGNORE_MILLISECONDS_OLD = 200;
     var mostRecentState = null;
     var onStateCallback = null;
-    var iframe = null;
-
-    function setFrame(element) {
-        iframe = element;
-    }
 
     /**
      * Assign a callback when the state has changed.
@@ -96,26 +101,27 @@
 
     /**
      * Note: value must be an escaped string. e.g. It must not contain any single quotation characters otherwise it will break the JS it will be injected into.
-     * @param object
-     * @param title
-     * @param force
+     * @param iframe - iframe element which will be used to store state
+     * @param object - object used to store state
+     * @param title - title associated with this state
+     * @param force - flag to force the "onStateChange" callback to be fired
      */
-    function pushState(object, title, force) {
+    function pushState(iframe, object, title, force) {
         // TODO: Firefox doesn't seem to create history states if they are created too quickly. Ideally, we should detect and fail if this API is called too soon.
 
         // Note: IE only allows strings for postMessage, so make sure it is a string.
         var postIt = 'window.parent.postMessage(' + JSON.stringify(JSON.stringify({
             force: !!force,
             reserved: RESERVED_IDENTIFIER,
-            timestamp: (new Date()).valueOf(), // milliseconds is granular given the time issue in Firefox described above.
+            timestamp: (new Date()).valueOf(), // milliseconds is granular given. (See the problem with Firefox above).
             object: object,
             title: title
         })) + ', ' + JSON.stringify(origin) + ');';
 
         var html = "<!DOCTYPE html><head><title>" + escapeHtml(title) + "</title><script>" + postIt + "<\/script><\/head><html><body></body></html>";
 
-        // The data uri scheme is not supported for iframes in Internet Explorer.
         if (isMSIE) {
+            // The data uri scheme is not supported with iframe in Internet Explorer.
             var doc = iframe.contentWindow.document;
             doc.open();
             doc.write(html);
@@ -128,7 +134,6 @@
 
     window.iframehistory = {
         onStateChange: onStateChange,
-        pushState: pushState,
-        setFrame: setFrame
+        pushState: pushState
     };
 }());
